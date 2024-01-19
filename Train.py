@@ -1,7 +1,6 @@
 import torch.nn.functional as F
 
 def train(model, device, optimizer, scheduler, data_loader):
-    total_samples = len(data_loader.dataset)
     model.train()
 
     for i, (data, target) in enumerate(data_loader):
