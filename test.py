@@ -1,19 +1,25 @@
 import torch
 import torch.nn.functional as F
 
-def test(model, device, test_loader):
+def test(model, device, data_loader):
     model.eval()
-    test_loss = 0
-    correct = 0
+
+    total_samples = len(data_loader.dataset)
+    correct_samples = 0
+    total_loss = 0
+
     with torch.no_grad():
-        for data, target in test_loader:
+        for data, target in data_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item() # 将一批的损失相加
-            pred = output.max(1, keepdim=True)[1] # 找到概率最大的下标
-            correct += pred.eq(target.view_as(pred)).sum().item()
+            loss = F.nll_loss(output, target, reduction='sum')
+            _, pred = torch.max(output, dim=1)
 
-    test_loss /= len(test_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+            total_loss += loss.item()
+            correct_samples += pred.eq(target).sum()
+
+    avg_loss = total_loss / total_samples
+    print('\nAverage test loss: ' + '{:.4f}'.format(avg_loss) +
+          '  Accuracy:' + '{:5}'.format(correct_samples) + '/' +
+          '{:5}'.format(total_samples) + ' (' +
+          '{:4.2f}'.format(100.0 * correct_samples / total_samples) + '%)\n')
